@@ -1,0 +1,4 @@
+class TipoConta{
+    idTipoConta;
+    Descricao;
+}

@@ -1,0 +1,4 @@
+class TipoMovimento{
+    idTipoMovimento;
+    DescMovimento;
+}
