@@ -1,0 +1,1 @@
+console.log("iSoNãO VaI dAr BoM")
