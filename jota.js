@@ -1,4 +1,5 @@
-import {Categoria} from './Models';
+const Categoria = require("./Models/Categoria")
+
 function parseSql(text){
     var list = text.split(' ');
     if(list[0].toLowerCase() == "select"){
@@ -20,6 +21,5 @@ function parseSql(text){
     }
 }
 
-
 var a = new Categoria('a','b');
-console.log(a);
+console.log(a.DescCategoria);

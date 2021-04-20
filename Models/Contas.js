@@ -5,3 +5,4 @@ class Contas{
     Usuario_idUsuario;
     SaldoInicial;
 }
+module.exports = Contas;

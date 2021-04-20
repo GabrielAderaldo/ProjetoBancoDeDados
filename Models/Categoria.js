@@ -4,4 +4,5 @@ class Categoria{
         this.DescCategoria = DescCategoria;
     }
 }
-module.export = Categoria;
+
+module.exports = Categoria;

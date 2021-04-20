@@ -8,3 +8,4 @@ class Usuario{
     UF;
     DataNascimento;
 }
+module.exports = Usuario;

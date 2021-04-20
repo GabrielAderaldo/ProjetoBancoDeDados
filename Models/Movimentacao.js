@@ -8,3 +8,4 @@ class Movimentacao{
     valor;
 }
 
+module.exports = Movimentacao;
