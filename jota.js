@@ -24,6 +24,9 @@ var tableFrom = [
 ];
 
 var boolAccept = true;
+var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "And", "Or", "In", "Not" ,"In", "Like"]
+var listaComandos = ["Select", "From", "Where", "Join", "Order by"]
+
 
 function parseSql(text){
     var list = text.split(' ');
@@ -57,7 +60,7 @@ function selectParse(text){
                 if(boolAccept){
                     selectVariables = variableTxt.split(',')
                     boolAccept = true;
-                    fromParse(list.slice(cont+2,list.length).join(" "));
+                    fromParse(list.slice(cont+2,list.length));
                 }
                 break;
         }
@@ -65,76 +68,102 @@ function selectParse(text){
     }
 }
 
-function fromParse(text){
-    console.log(text);
-    var list = text.split(' ');
+function fromParse(list){
     if(tablesNames.indexOf(list[0] != -1))
-    tableAndVariable(list[0])
+    tableAndVariable(list)
     else
     console.log(list[0]+" nao foi aceito")
 
 }
 
-function tableAndVariable(text){
-    switch(text){
+function tableAndVariable(list){
+    switch(list[0]){
         case "Categoria":
-            console.log("entrou na categoria")
             selectVariables.forEach(v=>{
                 if(tableFrom[0].atributos.indexOf(v)== -1)
                 boolAccept = false;
             });
-
+                
         break;
 
         case "Contas":
-            console.log("entrou nas contas")
             selectVariables.forEach(v=>{
                 if(tableFrom[1].atributos.indexOf(v)== -1)
                 boolAccept = false;
             });
+
         break;
 
         case "Movimentacao":
-            console.log("entrou na movimentacao")
             selectVariables.forEach(v=>{
                 if(tableFrom[2].atributos.indexOf(v)== -1)
                 boolAccept = false;
             });
+
         break;
 
         case "TipoMovimento":
-            console.log("entrou no TipoMovimento")
             selectVariables.forEach(v=>{
                 if(tableFrom[3].atributos.indexOf(v)== -1)
                 boolAccept = false;
             });
+
         break;
 
         case "TipoConta":
-            console.log("entrou no TipoConta")
             selectVariables.forEach(v=>{
                 if(tableFrom[4].atributos.indexOf(v)== -1)
                 boolAccept = false;
             });
+
         break;
 
         case "Usuario":
-            console.log("entrou no Usuario")
             selectVariables.forEach(v=>{
                 if(tableFrom[5].atributos.indexOf(v)== -1)
                 boolAccept = false;
             });
+
         break;
 
         default:
             boolAccept = false;
         break;
     }
+    if(boolAccept){
+        parseAfterFrom(list.splice(1,list.length))
+    }
 
 
 }
 
-var a = new Categoria('a','b');
-//console.log(a.DescCategoria);
-parseSql("Select idCategoria,id,DescCategoria from Usuario where usuario==joao")
-console.log(boolAccept);
+function parseAfterFrom(list){
+    switch(list[0]){
+        case "Where":
+        whereParseAcc(list.splice(1,list.length))
+        break;
+
+        case "join":
+        break;
+
+        default:
+        boolAccept = false;
+        break;
+    }
+}
+
+function whereParseAcc(list){
+    var listObj = [];
+    list.forEach(word =>{
+        if(listaOperadores.indexOf(word)!= -1)
+        listObj.push({value: word, tipo:"Operador"})
+        else
+        listObj.push({value: word, tipo:"variavel"})
+    })
+    console.log(listObj)
+}
+
+
+parseSql("Select Nome,idUsuario,Logradouro from Usuario Where Nome = joao")
+console.log(boolAccept)
+console.log(boolAccept? "É uma expressao valida" : "Não é uma expressao valida");
