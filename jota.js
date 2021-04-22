@@ -25,7 +25,7 @@ var tableFrom = [
 
 var boolAccept = true;
 var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "And", "Or", "In", "Not" ,"In", "Like"]
-var listaComandos = ["Select", "From", "Where", "Join", "Order by"]
+var listaComandos = ["Select", "From", "Where", "Join", "Order", "By"]
 
 
 function parseSql(text){
@@ -46,14 +46,32 @@ function parseSql(text){
 }
 
 function verificarOrdem(list){
-    console.log(list)
+    //select > from > join > where > order by 
+    var selectIndice = list.indexOf("Select")!= -1 ? list.indexOf("Select") : Infinity;
+    var fromIndice = list.indexOf("From")!= -1 ? list.indexOf("From") : Infinity;
+    var joinIndice = list.indexOf("Join")!= -1 ? list.indexOf("Join") : Infinity;
+    var whereIndice = list.indexOf("Where")!= -1 ? list.indexOf("Where") : Infinity;
+    var orderIndice = list.indexOf("Order")!= -1 ? list.indexOf("Order") : Infinity;
+    var byIndice = list.indexOf("By")!= -1 ? list.indexOf("By") : Infinity;
+
+    console.log(orderIndice)
+
+    if(selectIndice == 0 && fromIndice== 1 && (joinIndice<whereIndice || whereIndice!=Infinity || joinIndice==Infinity) && 
+    (joinIndice<orderIndice || orderIndice==Infinity || joinIndice==Infinity) && 
+    (whereIndice<orderIndice || orderIndice==Infinity || whereIndice==Infinity) && (byIndice-orderIndice==1||byIndice == orderIndice))
+    {
+        console.log("tudo bem")
+    }else{
+        console.log("erro")
+    }
+
 }
 
 function selectParse(text){
     var variableTxt = "";
     var list = text.split(' ');
     var cont = 1;
-    while(cont<list.length&&list[cont].toLowerCase!="from"&&boolAccept){
+    while(cont<list.length&&list[cont]=="From"&&boolAccept){
         variableTxt += list[cont];
 
         switch(list[cont+1].toLowerCase()){
@@ -145,6 +163,7 @@ function tableAndVariable(list){
         break;
     }
     if(boolAccept){
+        if(list.length>1)
         parseAfterFrom(list.splice(1,list.length))
     }
 
@@ -191,5 +210,5 @@ function whereParseAcc(list){
 }
 
 
-parseSql("Select Nome,idUsuario,Logradouro From Usuario Where Nome >= joao")
+parseSql("Select 11212312 From 12312 Where 1232123 Order By ")
 console.log(boolAccept? "É uma expressao valida" : "Não é uma expressao valida");
