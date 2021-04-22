@@ -25,13 +25,44 @@ var tableFrom = [
 
 var boolAccept = true;
 var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "And", "Or", "In", "Not" ,"In", "Like"]
-var listaComandos = ["Select", "From", "Where", "Join", "Order by"]
+var listaComandos = ["Select", "From", "Where", "Join", "Order", "By"]
 
 
 function parseSql(text){
     var list = text.split(' ');
-    if(list[0].toLowerCase() == "select"){
-        selectParse(list.slice(0,list.length).join(" "))
+    var verificationList = []
+    list.forEach(word =>{
+        if(listaComandos.indexOf(word)!=-1){
+            verificationList.push(word)
+        }
+    })
+    verificarOrdem(verificationList)
+
+    if(list[0] == "Select")
+    selectParse(list.slice(0,list.length).join(" "))
+    else
+    boolAccept = false;
+
+}
+
+function verificarOrdem(list){
+    //select > from > join > where > order by 
+    var selectIndice = list.indexOf("Select")!= -1 ? list.indexOf("Select") : Infinity;
+    var fromIndice = list.indexOf("From")!= -1 ? list.indexOf("From") : Infinity;
+    var joinIndice = list.indexOf("Join")!= -1 ? list.indexOf("Join") : Infinity;
+    var whereIndice = list.indexOf("Where")!= -1 ? list.indexOf("Where") : Infinity;
+    var orderIndice = list.indexOf("Order")!= -1 ? list.indexOf("Order") : Infinity;
+    var byIndice = list.indexOf("By")!= -1 ? list.indexOf("By") : Infinity;
+
+    console.log(orderIndice)
+
+    if(selectIndice == 0 && fromIndice== 1 && (joinIndice<whereIndice || whereIndice!=Infinity || joinIndice==Infinity) && 
+    (joinIndice<orderIndice || orderIndice==Infinity || joinIndice==Infinity) && 
+    (whereIndice<orderIndice || orderIndice==Infinity || whereIndice==Infinity) && (byIndice-orderIndice==1||byIndice == orderIndice))
+    {
+        console.log("tudo bem")
+    }else{
+        console.log("erro")
     }
 
 }
@@ -40,7 +71,7 @@ function selectParse(text){
     var variableTxt = "";
     var list = text.split(' ');
     var cont = 1;
-    while(cont<list.length&&list[cont].toLowerCase!="from"&&boolAccept){
+    while(cont<list.length&&list[cont]=="From"&&boolAccept){
         variableTxt += list[cont];
 
         switch(list[cont+1].toLowerCase()){
@@ -61,6 +92,7 @@ function selectParse(text){
                     selectVariables = variableTxt.split(',')
                     boolAccept = true;
                     fromParse(list.slice(cont+2,list.length));
+                    cont = list.length;
                 }
                 break;
         }
@@ -131,6 +163,7 @@ function tableAndVariable(list){
         break;
     }
     if(boolAccept){
+        if(list.length>1)
         parseAfterFrom(list.splice(1,list.length))
     }
 
@@ -154,16 +187,28 @@ function parseAfterFrom(list){
 
 function whereParseAcc(list){
     var listObj = [];
+    var contador = 0;
     list.forEach(word =>{
-        if(listaOperadores.indexOf(word)!= -1)
-        listObj.push({value: word, tipo:"Operador"})
-        else
-        listObj.push({value: word, tipo:"variavel"})
+        
+        if(listaOperadores.indexOf(word)!= -1){
+            listObj.push({value: word, tipo:"Operador"})
+            if(contador>0){
+                if(listObj[contador].tipo == listObj[contador-1].tipo)
+                boolAccept =  false;
+            }
+        }else{
+            listObj.push({value: word, tipo:"variavel"})
+            if(contador>0){
+                if(listObj[contador].tipo == listObj[contador-1].tipo)
+                boolAccept =  false;
+            }
+        }
+        contador++;
+
+
     })
-    console.log(listObj)
 }
 
 
-parseSql("Select Nome,idUsuario,Logradouro from Usuario Where Nome = joao")
-console.log(boolAccept)
+parseSql("Select 11212312 From 12312 Where 1232123 Order By ")
 console.log(boolAccept? "É uma expressao valida" : "Não é uma expressao valida");
