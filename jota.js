@@ -30,10 +30,23 @@ var listaComandos = ["Select", "From", "Where", "Join", "Order by"]
 
 function parseSql(text){
     var list = text.split(' ');
-    if(list[0].toLowerCase() == "select"){
-        selectParse(list.slice(0,list.length).join(" "))
-    }
+    var verificationList = []
+    list.forEach(word =>{
+        if(listaComandos.indexOf(word)!=-1){
+            verificationList.push(word)
+        }
+    })
+    verificarOrdem(verificationList)
 
+    if(list[0] == "Select")
+    selectParse(list.slice(0,list.length).join(" "))
+    else
+    boolAccept = false;
+
+}
+
+function verificarOrdem(list){
+    console.log(list)
 }
 
 function selectParse(text){
@@ -61,6 +74,7 @@ function selectParse(text){
                     selectVariables = variableTxt.split(',')
                     boolAccept = true;
                     fromParse(list.slice(cont+2,list.length));
+                    cont = list.length;
                 }
                 break;
         }
@@ -154,16 +168,28 @@ function parseAfterFrom(list){
 
 function whereParseAcc(list){
     var listObj = [];
+    var contador = 0;
     list.forEach(word =>{
-        if(listaOperadores.indexOf(word)!= -1)
-        listObj.push({value: word, tipo:"Operador"})
-        else
-        listObj.push({value: word, tipo:"variavel"})
+        
+        if(listaOperadores.indexOf(word)!= -1){
+            listObj.push({value: word, tipo:"Operador"})
+            if(contador>0){
+                if(listObj[contador].tipo == listObj[contador-1].tipo)
+                boolAccept =  false;
+            }
+        }else{
+            listObj.push({value: word, tipo:"variavel"})
+            if(contador>0){
+                if(listObj[contador].tipo == listObj[contador-1].tipo)
+                boolAccept =  false;
+            }
+        }
+        contador++;
+
+
     })
-    console.log(listObj)
 }
 
 
-parseSql("Select Nome,idUsuario,Logradouro from Usuario Where Nome = joao")
-console.log(boolAccept)
+parseSql("Select Nome,idUsuario,Logradouro From Usuario Where Nome >= joao")
 console.log(boolAccept? "É uma expressao valida" : "Não é uma expressao valida");
