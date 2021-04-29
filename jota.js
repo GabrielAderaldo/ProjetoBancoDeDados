@@ -26,7 +26,10 @@ var tableFrom = [
 var boolAccept = true;
 var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "And", "Or", "In", "Not" ,"In", "Like"]
 var listaComandos = ["Select", "From", "Where", "Join", "Order", "By"]
-
+var listObj = [];
+var result = {type:"",
+              input:[{}],
+              params:[]};
 
 function parseSql(text){
     var list = text.split(' ');
@@ -36,16 +39,10 @@ function parseSql(text){
             verificationList.push(word)
         }
     })
-    verificarOrdem(verificationList)
-
-    if(list[0] == "Select")
-    selectParse(list.slice(0,list.length).join(" "))
-    else
-    boolAccept = false;
-
+    verificarOrdem(verificationList,list)
 }
 
-function verificarOrdem(list){
+function verificarOrdem(list,listTxt){
     //select > from > join > where > order by 
     var selectIndice = list.indexOf("Select")!= -1 ? list.indexOf("Select") : Infinity;
     var fromIndice = list.indexOf("From")!= -1 ? list.indexOf("From") : Infinity;
@@ -54,24 +51,25 @@ function verificarOrdem(list){
     var orderIndice = list.indexOf("Order")!= -1 ? list.indexOf("Order") : Infinity;
     var byIndice = list.indexOf("By")!= -1 ? list.indexOf("By") : Infinity;
 
-    console.log(orderIndice)
-
     if(selectIndice == 0 && fromIndice== 1 && (joinIndice<whereIndice || whereIndice!=Infinity || joinIndice==Infinity) && 
     (joinIndice<orderIndice || orderIndice==Infinity || joinIndice==Infinity) && 
     (whereIndice<orderIndice || orderIndice==Infinity || whereIndice==Infinity) && (byIndice-orderIndice==1||byIndice == orderIndice))
     {
-        console.log("tudo bem")
+        if(list[0] == "Select")
+        selectParse(listTxt.slice(1,listTxt.length))
+        else
+        boolAccept = false;
     }else{
         console.log("erro")
     }
 
 }
 
-function selectParse(text){
+function selectParse(list){
+    var cont = 0;
     var variableTxt = "";
-    var list = text.split(' ');
-    var cont = 1;
-    while(cont<list.length&&list[cont]=="From"&&boolAccept){
+
+    while(cont<list.length&&boolAccept){
         variableTxt += list[cont];
 
         switch(list[cont+1].toLowerCase()){
@@ -90,8 +88,20 @@ function selectParse(text){
             case 'from':
                 if(boolAccept){
                     selectVariables = variableTxt.split(',')
-                    boolAccept = true;
-                    fromParse(list.slice(cont+2,list.length));
+                    if(selectVariables.indexOf("*")!=-1 && selectVariables.length==1){
+                        result.type = "selection";
+                        boolAccept = true;
+                        fromParse(list.slice(cont+2,list.length));
+                    }else{
+                        if(selectVariables.indexOf("*")!=-1){
+                            boolAccept = false;
+                        }else{
+                            result.type = "projection";
+                            boolAccept = true;
+                            fromParse(list.slice(cont+2,list.length));
+                        }
+                    }
+                    
                     cont = list.length;
                 }
                 break;
@@ -115,7 +125,7 @@ function tableAndVariable(list){
                 if(tableFrom[0].atributos.indexOf(v)== -1)
                 boolAccept = false;
             });
-                
+             
         break;
 
         case "Contas":
@@ -162,6 +172,9 @@ function tableAndVariable(list){
             boolAccept = false;
         break;
     }
+    if(selectVariables.indexOf("*"!=-1)){
+        boolAccept = selectVariables.length == 1 ? true:false;
+    }
     if(boolAccept){
         if(list.length>1)
         parseAfterFrom(list.splice(1,list.length))
@@ -171,12 +184,17 @@ function tableAndVariable(list){
 }
 
 function parseAfterFrom(list){
-    switch(list[0]){
-        case "Where":
+    console.log(list)
+    switch(list[0].toLowerCase()){
+
+        case "join":
+        break;
+
+        case "where":
         whereParseAcc(list.splice(1,list.length))
         break;
 
-        case "join":
+        case "order":
         break;
 
         default:
@@ -185,30 +203,42 @@ function parseAfterFrom(list){
     }
 }
 
+function joinParseAcc(list){
+
+}
+
 function whereParseAcc(list){
-    var listObj = [];
+    console.log(list)
     var contador = 0;
     list.forEach(word =>{
         
-        if(listaOperadores.indexOf(word)!= -1){
-            listObj.push({value: word, tipo:"Operador"})
-            if(contador>0){
-                if(listObj[contador].tipo == listObj[contador-1].tipo)
-                boolAccept =  false;
-            }
+        if(listaComandos.indexOf(word)!=-1){
+            listObj.forEach(obj=>{
+                if(obj.tipo=="variavel")
+                result.params.push(obj.value);
+            })
+            parseAfterFrom(list.splice(contador,list.length))
         }else{
-            listObj.push({value: word, tipo:"variavel"})
-            if(contador>0){
-                if(listObj[contador].tipo == listObj[contador-1].tipo)
-                boolAccept =  false;
+            if(listaOperadores.indexOf(word)!= -1){
+                listObj.push({value: word, tipo:"Operador"})
+                if(contador>0){
+                    if(listObj[contador].tipo == listObj[contador-1].tipo)
+                    boolAccept =  false;
+                }
+            }else{
+                listObj.push({value: word, tipo:"variavel"})
+                if(contador>0){
+                    if(listObj[contador].tipo == listObj[contador-1].tipo)
+                    boolAccept =  false;
+                }
             }
         }
         contador++;
-
-
     })
 }
 
 
-parseSql("Select 11212312 From 12312 Where 1232123 Order By ")
+parseSql("Select Nome From Usuarios Where Nome = Joao Order By")
 console.log(boolAccept? "É uma expressao valida" : "Não é uma expressao valida");
+//console.log(listObj)
+console.log(result)
