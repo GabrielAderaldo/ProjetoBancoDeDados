@@ -28,8 +28,11 @@ var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "And", "Or", "In", "Not"
 var listaComandos = ["Select", "From", "Where", "Join", "Order", "By"]
 var listObj = [];
 var result = {type:"",
-              input:[{}],
+              input:[],
               params:[]};
+var whereResult = {type:"junction",
+                input:[],
+                params:[]};
 
 function parseSql(text){
     var list = text.split(' ');
@@ -217,6 +220,7 @@ function whereParseAcc(list){
                 if(obj.tipo=="variavel")
                 result.params.push(obj.value);
             })
+            result.input.push(whereResult)
             parseAfterFrom(list.splice(contador,list.length))
         }else{
             if(listaOperadores.indexOf(word)!= -1){
@@ -227,6 +231,7 @@ function whereParseAcc(list){
                 }
             }else{
                 listObj.push({value: word, tipo:"variavel"})
+                whereResult.params.push(word);
                 if(contador>0){
                     if(listObj[contador].tipo == listObj[contador-1].tipo)
                     boolAccept =  false;
@@ -238,7 +243,8 @@ function whereParseAcc(list){
 }
 
 
-parseSql("Select Nome From Usuarios Where Nome = Joao Order By")
+parseSql("Select Nome From Usuarios Where X = Y Order By")
 console.log(boolAccept? "É uma expressao valida" : "Não é uma expressao valida");
 //console.log(listObj)
 console.log(result)
+console.log(result.input)
