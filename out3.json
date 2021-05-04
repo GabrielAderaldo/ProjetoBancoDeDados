@@ -1,0 +1,301 @@
+{
+    "binary_tree": {
+        "values": {
+            "1": {
+                "value": "selection",
+                "params": [
+                    "PNAME",
+                    "Aquarius"
+                ],
+                "left": "Project"
+            },
+            "2": {
+                "value": "projection",
+                "params": [
+                    "PNUMBER"
+                ],
+                "left": {
+                    "value": "selection",
+                    "params": [
+                        "PNAME",
+                        "Aquarius"
+                    ],
+                    "left": "Project"
+                }
+            },
+            "3": {
+                "value": "projection",
+                "params": [
+                    "ESSN, PNO"
+                ],
+                "left": "Works_On"
+            },
+            "4": {
+                "value": "junction",
+                "params": [
+                    "PNUMBER",
+                    "PNO"
+                ],
+                "left": {
+                    "value": "projection",
+                    "params": [
+                        "PNUMBER"
+                    ],
+                    "left": {
+                        "value": "selection",
+                        "params": [
+                            "PNAME",
+                            "Aquarius"
+                        ],
+                        "left": "Project"
+                    }
+                },
+                "right": {
+                    "value": "projection",
+                    "params": [
+                        "ESSN, PNO"
+                    ],
+                    "left": "Works_On"
+                }
+            },
+            "5": {
+                "value": "projection",
+                "params": [
+                    "ESSN"
+                ],
+                "left": {
+                    "value": "junction",
+                    "params": [
+                        "PNUMBER",
+                        "PNO"
+                    ],
+                    "left": {
+                        "value": "projection",
+                        "params": [
+                            "PNUMBER"
+                        ],
+                        "left": {
+                            "value": "selection",
+                            "params": [
+                                "PNAME",
+                                "Aquarius"
+                            ],
+                            "left": "Project"
+                        }
+                    },
+                    "right": {
+                        "value": "projection",
+                        "params": [
+                            "ESSN, PNO"
+                        ],
+                        "left": "Works_On"
+                    }
+                }
+            },
+            "6": {
+                "value": "selection",
+                "params": [
+                    "BDATE",
+                    "1957-12-31"
+                ],
+                "left": "Employee"
+            },
+            "7": {
+                "value": "projection",
+                "params": [
+                    "SSN",
+                    "LNAME"
+                ],
+                "left": {
+                    "value": "selection",
+                    "params": [
+                        "BDATE",
+                        "1957-12-31"
+                    ],
+                    "left": "Employee"
+                }
+            },
+            "8": {
+                "value": "junction",
+                "params": [
+                    "ESSN",
+                    "SSN"
+                ],
+                "left": {
+                    "value": "projection",
+                    "params": [
+                        "ESSN"
+                    ],
+                    "left": {
+                        "value": "junction",
+                        "params": [
+                            "PNUMBER",
+                            "PNO"
+                        ],
+                        "left": {
+                            "value": "projection",
+                            "params": [
+                                "PNUMBER"
+                            ],
+                            "left": {
+                                "value": "selection",
+                                "params": [
+                                    "PNAME",
+                                    "Aquarius"
+                                ],
+                                "left": "Project"
+                            }
+                        },
+                        "right": {
+                            "value": "projection",
+                            "params": [
+                                "ESSN, PNO"
+                            ],
+                            "left": "Works_On"
+                        }
+                    }
+                },
+                "right": {
+                    "value": "projection",
+                    "params": [
+                        "SSN",
+                        "LNAME"
+                    ],
+                    "left": {
+                        "value": "selection",
+                        "params": [
+                            "BDATE",
+                            "1957-12-31"
+                        ],
+                        "left": "Employee"
+                    }
+                }
+            },
+            "9": {
+                "value": "projection",
+                "params": [
+                    "LNAME"
+                ],
+                "left": {
+                    "value": "junction",
+                    "params": [
+                        "ESSN",
+                        "SSN"
+                    ],
+                    "left": {
+                        "value": "projection",
+                        "params": [
+                            "ESSN"
+                        ],
+                        "left": {
+                            "value": "junction",
+                            "params": [
+                                "PNUMBER",
+                                "PNO"
+                            ],
+                            "left": {
+                                "value": "projection",
+                                "params": [
+                                    "PNUMBER"
+                                ],
+                                "left": {
+                                    "value": "selection",
+                                    "params": [
+                                        "PNAME",
+                                        "Aquarius"
+                                    ],
+                                    "left": "Project"
+                                }
+                            },
+                            "right": {
+                                "value": "projection",
+                                "params": [
+                                    "ESSN, PNO"
+                                ],
+                                "left": "Works_On"
+                            }
+                        }
+                    },
+                    "right": {
+                        "value": "projection",
+                        "params": [
+                            "SSN",
+                            "LNAME"
+                        ],
+                        "left": {
+                            "value": "selection",
+                            "params": [
+                                "BDATE",
+                                "1957-12-31"
+                            ],
+                            "left": "Employee"
+                        }
+                    }
+                }
+            }
+        },
+        "index": 9
+    },
+    "mounted_tree": {
+        "value": "projection",
+        "params": [
+            "LNAME"
+        ],
+        "left": {
+            "value": "junction",
+            "params": [
+                "ESSN",
+                "SSN"
+            ],
+            "left": {
+                "value": "projection",
+                "params": [
+                    "ESSN"
+                ],
+                "left": {
+                    "value": "junction",
+                    "params": [
+                        "PNUMBER",
+                        "PNO"
+                    ],
+                    "left": {
+                        "value": "projection",
+                        "params": [
+                            "PNUMBER"
+                        ],
+                        "left": {
+                            "value": "selection",
+                            "params": [
+                                "PNAME",
+                                "Aquarius"
+                            ],
+                            "left": "Project"
+                        }
+                    },
+                    "right": {
+                        "value": "projection",
+                        "params": [
+                            "ESSN, PNO"
+                        ],
+                        "left": "Works_On"
+                    }
+                }
+            },
+            "right": {
+                "value": "projection",
+                "params": [
+                    "SSN",
+                    "LNAME"
+                ],
+                "left": {
+                    "value": "selection",
+                    "params": [
+                        "BDATE",
+                        "1957-12-31"
+                    ],
+                    "left": "Employee"
+                }
+            }
+        }
+    }
+}
