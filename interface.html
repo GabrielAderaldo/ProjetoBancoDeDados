@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body onselectstart="return false">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: block;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+            justify-content: center;
+            gap:120px;
+            background: linear-gradient(to bottom right, #a22dc0, #be6ea9)
+        }
+
+        .inputTxtArea, .resTxt{
+            display: flex;
+            flex-direction: column;
+            font-size: 38px;
+            font-weight: bold;
+            text-align: left;
+            gap: 15px;
+        }
+
+        textarea {
+            resize: none;
+            outline: none;
+            padding-top: 10px;
+            padding-left: 10px;
+            border-radius: 5px;
+            width: 390px;
+            padding-right: 10px;
+        }
+
+        .resTxt{
+            display: flex;
+        }
+
+        .arrow {
+            cursor: pointer;
+            display: inline-block;
+            height: 40px;
+            margin-left: 40px;
+            margin-right: 40px;
+            position: relative;
+            line-height: 2.5em;
+            padding-left: 1em;
+            padding-right: 2em;
+            background: white;
+            color: black;
+            font-weight: bold;
+        }
+
+        .arrow:after {
+            content: "";
+            position: absolute;
+            border-bottom: 20px solid transparent;
+            border-top: 20px solid transparent;
+            height: 0px;
+            width: 0px;
+            margin-right: -20px;
+            right: 0;
+        }
+
+        .arrow:hover,
+        .arrow:active {
+            background: #f1eff1;
+            color: black;
+        }
+
+        .arrow::after {
+            border-left: 20px solid rgb(255, 255, 255);
+        }
+
+        .arrow:hover::after {
+            border-left: 20px solid #f1eff1;
+        }
+    </style>
+
+    <div class="container">
+        <div class="inputTxtArea">
+            <label style="color: white;">Digite o comando SQL</label>
+            <textarea rows="30" placeholder="Select..."></textarea>
+        </div>
+        <a class="arrow">Gerar grafo</a>
+        <div class="resTxt">
+            <label style="color: white;">Resposta</label>
+            <textarea rows="30" placeholder="resposta..." disabled style="background-color: #bebebecf;"></textarea>
+        </div>
+    </div>
+</body>
+
+</html>
