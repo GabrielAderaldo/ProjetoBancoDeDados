@@ -1,0 +1,1 @@
+{"type":"projection","params":["nome"],"input":{"type":"selection","params":["x","nome","y","t"],"input":{"type":"cartesian_product","params":[],"input":["usuario",{"type":"cartesian_product","params":[],"input":["categoria",{"type":"cartesian_product","params":[],"input":["movimentacao","contas"]}]}]}}}
