@@ -437,7 +437,7 @@ function whereResultCreate(str){
 
         }
         console.log(str)
-        selectionResult.params = str[0];
+        selectionResult.params.push(str[0]);
     }
 
 }
