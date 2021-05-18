@@ -8,6 +8,8 @@ const fs = require('fs');
 
 var selectVariables;
 var tablesNames = ["Categoria", "Contas", "Movimentacao", "TipoMovimento", "TipoConta", "Usuario"]
+var arr1 = [];
+var posiFinal = [];
 
 var tableFrom = [
     //0
@@ -283,53 +285,135 @@ function createCartesianAfterJoin(list) {
 
 function whereParseAcc(list) {
     console.log("entrou no where")
-    console.log(list)
-    var contador = 0;
-    list.forEach(word => {
-        if (listaOperadores.indexOf(word) != -1 || listaOperadorAndOr.indexOf(word) != -1) {
-            if (listaOperadores.indexOf(word) != -1) {
-                listObj.push({ value: word, tipo: "Operador" })
-                if (contador > 0) {
-                    if (listObj[contador].tipo == listObj[contador - 1].tipo)
-                        boolAccept = false;
-
-                }
-            }
-
-            if(listaOperadorAndOr.indexOf(word) != -1){
-                listObj.push({ value: word, tipo: "OperadorAndOr" })
-                if (contador > 0) {
-                    if (listObj[contador].tipo == listObj[contador - 1].tipo)
-                        boolAccept = false;
-                }
-            }
-
-        } else {
-            listObj.push({ value: word, tipo: "variavel" })
-            selectionResult.params.push(word);
-            if (contador > 0) {
-                if (listObj[contador].tipo == listObj[contador - 1].tipo) {
-                    console.log("NAAAO passou no where parse")
-                    boolAccept = false;
-                }
-            }
-        }
-
-        /*listObj.forEach(obj=>{
-                if(obj.tipo=="variavel")
-                result.params.push(obj.value);
-            })
-            result.input.push(selectionResult)
-            console.log("teste rapidin "+list.splice(contador,list.length))
-            parseAfterFrom(list.splice(contador,list.length))*/
-
-        contador++;
-    })
+    var stringList = list.join(" ");
+    preWhereResult(stringList)
 }
 
-parseSql("Select nome From Usuario Join Categoria Join Contas Join Movimentacao Where X = Nome AND y = t")
+var whereResult;
+
+
+function preWhereResult(str){
+    console.log(str)
+    var listP = str.split(" ");
+    var deleteCount = 0;
+    
+    for(var i = 0; i<listP.length; i++){
+        console.log(i)
+        console.log(listP[i])
+        switch(listP[i]){
+            case "(":
+            case ")":
+            case "and":
+            case "or":
+            break;
+
+            default:
+                var obj = {type:listP[i+1],params:[listP[i],listP[i+2]],input:[]}
+                listP[i] = obj;
+                listP[i+1] = "DELETE";
+                listP[i+2] = "DELETE";
+                i += 2;
+                deleteCount += 2;
+        }
+    }
+    while(deleteCount != 0){
+        listP.splice(listP.indexOf("DELETE"),1)
+        deleteCount--;
+    }
+    whereResultCreate(listP)
+
+}
+
+//WHERE RESULT
+function whereResultCreate(str){
+    
+    var aux = [];
+    var posi = [];
+    var boolTemPar = false;
+    for(var i = 0; i<str.length; i++){
+        switch(str[i]){
+            case " ":
+            case "":
+                break;
+            case "(":
+                aux = [];
+                posi = [];
+                posi.push(i);
+                boolTemPar = true;
+                break;
+
+            case ")":
+                if(aux!=null&&aux.length>0){
+                arr1.push(aux);
+                posi.push(i);
+
+                if(posi.length>1)
+                posiFinal.push(posi)
+                
+                aux = []
+                posi = []
+                }
+                break;
+
+            default:
+                aux.push(str[i]);
+        }
+    }
+    console.log("VOU CHORAR")
+    console.log(arr1.length)
+    for(var i = 0; i<arr1.length; i++){
+        while(arr1[i].length>1){
+            var currentArr = arr1[i];
+            var obj = {type:currentArr[1],params:[currentArr[0],currentArr[2]],input:[]}
+            arr1[i].shift();
+            arr1[i].shift();
+            arr1[i][0]=obj;
+        } 
+    }
+    console.log("fooooreach")
+    arr1.forEach(x=>{console.log(x)})
+
+    var deleteCount = 0;
+    console.log(posiFinal)
+    while(posiFinal.length>0){
+
+        var posicao = posiFinal[0][0]+1;
+        var final = posiFinal[0][1];
+        posiFinal.shift();
+
+        str[posicao-1] = arr1[0];
+        arr1.shift();
+
+        for(var i= posicao; i<=final;i++){
+            str[i] = "DELETE";
+            deleteCount++;
+        }
+    }
+
+    while(deleteCount != 0){
+        str.splice(str.indexOf("DELETE"),1)
+        deleteCount--;
+    }
+    
+    if(boolTemPar){
+        whereResultCreate(str)
+    }else{
+        var vaitomarnocu = str.length/2;
+        for(var i = 0; i<vaitomarnocu;i++){
+            var currentArr = str;
+            var obj = {type:currentArr[1],params:[currentArr[0],currentArr[2]],input:[]}
+            str.shift();
+            str.shift();
+            str[0]=obj;
+        }
+        whereresult = str;
+        selectionResult.params = whereresult;
+    }
+
+}
+
+parseSql("Select nome From Usuario Join Categoria Join Contas Join Movimentacao Where X = Nome AND y = t AND y = z OR ( ( X LIKE B AND ( B = 3 OR C = 5 ) ) )")
 console.log(boolAccept ? "É uma expressao valida" : "Não é uma expressao valida");
-//console.log(listObj)2
 
 var json = JSON.stringify(result)
 fs.writeFileSync('result.json', json, 'utf8')

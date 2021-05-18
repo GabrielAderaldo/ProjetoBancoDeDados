@@ -1,0 +1,60 @@
+[
+    {
+        "params": [
+            {
+                "type": "OR",
+                "params": [
+                    {
+                        "type": "AND",
+                        "params": [
+                            {
+                                "type": "=",
+                                "params": [
+                                    "X",
+                                    "2"
+                                ],
+                                "input": []
+                            },
+                            {
+                                "type": "=",
+                                "params": [
+                                    "B",
+                                    "3"
+                                ],
+                                "input": []
+                            }
+                        ],
+                        "input": []
+                    },
+                    [
+                        {
+                            "type": "AND",
+                            "params": [
+                                {
+                                    "type": "=",
+                                    "params": [
+                                        "X",
+                                        "1"
+                                    ],
+                                    "input": []
+                                },
+                                {
+                                    "type": "=",
+                                    "params": [
+                                        "Y",
+                                        "2"
+                                    ],
+                                    "input": []
+                                }
+                            ],
+                            "input": []
+                        }
+                    ]
+                ],
+                "input": []
+            },
+            null
+        ],
+        "input": []
+    }
+]
