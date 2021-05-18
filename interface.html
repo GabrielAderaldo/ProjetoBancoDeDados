@@ -26,11 +26,12 @@
             align-items: center;
             flex-direction: row;
             justify-content: center;
-            gap:120px;
+            gap: 120px;
             background: linear-gradient(to bottom right, #a22dc0, #be6ea9)
         }
 
-        .inputTxtArea, .resTxt{
+        .inputTxtArea,
+        .resTxt {
             display: flex;
             flex-direction: column;
             font-size: 38px;
@@ -49,7 +50,7 @@
             padding-right: 10px;
         }
 
-        .resTxt{
+        .resTxt {
             display: flex;
         }
 
@@ -97,14 +98,460 @@
     <div class="container">
         <div class="inputTxtArea">
             <label style="color: white;">Digite o comando SQL</label>
-            <textarea rows="30" placeholder="Select..."></textarea>
+            <textarea rows="30" placeholder="Select..." class="comandSQL"></textarea>
         </div>
-        <a class="arrow">Gerar grafo</a>
+        <a class="arrow" onclick="parseSql()">Gerar grafo</a>
         <div class="resTxt">
             <label style="color: white;">Resposta</label>
-            <textarea rows="30" placeholder="resposta..." disabled style="background-color: #bebebecf;"></textarea>
+            <textarea rows="30" placeholder="resposta..." disabled style="background-color: #bebebecf;" class="result"></textarea>
         </div>
     </div>
 </body>
+
+
+<script>
+    var selectVariables;
+    var tablesNames = ["Categoria", "Contas", "Movimentacao", "TipoMovimento", "TipoConta", "Usuario"]
+    var arr1 = [];
+    var posiFinal = [];
+
+    var tableFrom = [
+        //0
+        { name: "Categoria", atributos: ["idcategoria", "desccategoria"] },
+        //1
+        { name: "Contas", atributos: ["idconta", "descricao", "tipoconta_idtipoconta", "usuario_idUsuario", "saldoinicial"] },
+        //2
+        { name: "Movimentacao", atributos: ["idmovimentacao", "datamovimentacao", "descricao", "tipomovimento_idmovimento", "categoria_idcategoria", "contas_idconta", "valor"] },
+        //3
+        { name: "TipoMovimento", atributos: ["idtipomovimento", "descmovimento"] },
+        //4
+        { name: "TipoConta", atributos: ["idtipoConta", "descricao"] },
+        //5
+        { name: "Usuario", atributos: ["idusuario", "nome", "logradouro", "numero", "bairro", "cep", "uf", "datanascimento"] }
+    ];
+
+    var boolAccept = true;
+    var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "like"]
+    var listaOperadorAndOr = ["and", "or"]
+    //var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "And", "Or", "In", "Notin", "Like"] com "in" e "not in"
+    var listaComandos = ["select", "from", "join", "where", "order", "by"]
+    var listObj = [];
+    var result = { type: "projection", params: [], input: [] };
+    var selectionResult = { type: "selection", params: [], input: [] };
+    var joinResult = { type: "cartesian_product", input: [], params: [] };
+
+    var todasTabelasDoComando = [];
+
+
+
+    function parseSql() {
+        console.log("aaaah eu entrei")
+        var textArea = document.querySelector(".comandSQL")
+        text = textArea.value
+        text = text.toLowerCase();
+        console.log(text)
+
+        var list = text.split(' ');
+        var verificationList = []
+        list.forEach(word => {
+            if (listaComandos.indexOf(word) != -1) {
+                verificationList.push(word)
+            }
+        })
+        verificarOrdem(verificationList, list)
+    }
+
+    function verificarOrdem(list, listTxt) {
+        //select > from > join > where > order by 
+        var selectIndice = list.indexOf("select") != -1 ? list.indexOf("select") : Infinity;
+        var fromIndice = list.indexOf("from") != -1 ? list.indexOf("from") : Infinity;
+        var joinIndice = list.indexOf("join") != -1 ? list.indexOf("join") : Infinity;
+        var whereIndice = list.indexOf("where") != -1 ? list.indexOf("where") : Infinity;
+        var orderIndice = list.indexOf("order") != -1 ? list.indexOf("order") : Infinity;
+        var byIndice = list.indexOf("by") != -1 ? list.indexOf("by") : Infinity;
+
+        if (selectIndice == 0 && fromIndice == 1 && (joinIndice < whereIndice || whereIndice != Infinity || joinIndice == Infinity) &&
+            (joinIndice < orderIndice || orderIndice == Infinity || joinIndice == Infinity) &&
+            (whereIndice < orderIndice || orderIndice == Infinity || whereIndice == Infinity) && (byIndice - orderIndice == 1 || byIndice == orderIndice)) {
+            if (list[0] == "select")
+                selectParse(listTxt.slice(1, listTxt.length))
+            else
+                boolAccept = false;
+
+        } else {
+            boolAccept = false;
+        }
+
+    }
+
+    function selectParse(list) {
+        var cont = 0;
+        var variableTxt = "";
+
+        while (cont < list.length && boolAccept) {
+            variableTxt += list[cont];
+
+            switch (list[cont + 1].toLowerCase()) {
+                case 'where':
+                case 'join':
+                case 'order by':
+                    boolAccept = false;
+
+                    break;
+
+                case 'from':
+                    if (boolAccept) {
+                        selectVariables = variableTxt.split(',')
+                        if (selectVariables.indexOf("*") != -1 && selectVariables.length == 1) {
+                            result.type = "projection";
+                            boolAccept = true;
+                            result.params = "*";
+                            fromParse(list.slice(cont + 2, list.length));
+                        } else {
+                            boolAccept = false;
+                            if (selectVariables.indexOf("*") != -1) {
+                                boolAccept = false;
+                            } else {
+                                result.type = "projection";
+                                result.params = selectVariables;
+                                boolAccept = true;
+                                fromParse(list.slice(cont + 2, list.length));
+                            }
+                        }
+
+                        cont = list.length;
+                    }
+                    break;
+            }
+            cont++;
+        }
+    }
+
+    function fromParse(list) {
+        if (tablesNames.indexOf(list[0] != -1)) {
+            todasTabelasDoComando.push(list[0])
+            tableAndVariable(list)
+        } else {
+            boolAccept = false;
+
+        }
+
+    }
+
+    function tableAndVariable(list) {
+        switch (list[0]) {
+            case "categoria":
+                selectVariables.forEach(v => {
+                    if (tableFrom[0].atributos.indexOf(v) == -1)
+                        boolAccept = false;
+                });
+
+                break;
+
+            case "contas":
+                selectVariables.forEach(v => {
+                    if (tableFrom[1].atributos.indexOf(v) == -1)
+                        boolAccept = false;
+                });
+
+                break;
+
+            case "movimentacao":
+                selectVariables.forEach(v => {
+                    if (tableFrom[2].atributos.indexOf(v) == -1)
+                        boolAccept = false;
+                });
+
+                break;
+
+            case "tipomovimento":
+                selectVariables.forEach(v => {
+                    if (tableFrom[3].atributos.indexOf(v) == -1)
+                        boolAccept = false;
+                });
+
+                break;
+
+            case "tipoconta":
+                selectVariables.forEach(v => {
+                    if (tableFrom[4].atributos.indexOf(v) == -1)
+                        boolAccept = false;
+                });
+
+                break;
+
+            case "usuario":
+                selectVariables.forEach(v => {
+                    if (tableFrom[5].atributos.indexOf(v) == -1)
+                        boolAccept = false;
+                });
+                break;
+
+            default:
+                boolAccept = false;
+                break;
+        }
+        if (selectVariables.indexOf("*" != -1)) {
+            boolAccept = selectVariables.length == 1 ? true : false;
+        }
+        if (boolAccept) {
+            if (list.length > 1) {
+                parseAfterFrom(list.splice(1, list.length))
+            }
+        }
+
+
+    }
+
+    function parseAfterFrom(list) {
+
+        switch (list[0].toLowerCase()) {
+            case "join":
+                joinParseAcc(list)
+                break;
+
+            case "where":
+                whereParseAcc(list.splice(1, list.length))
+                break;
+
+            case "order":
+                break;
+
+            default:
+                boolAccept = false;
+                break;
+        }
+    }
+
+    function joinParseAcc(list) {
+        var index = 0;
+        var boolThanos = 0;
+        list.forEach(word => {
+            if (boolAccept) {
+                if (listaComandos.indexOf(word) != -1 && word.toLowerCase() != "join") {
+                    createCartesianAfterJoin(list.splice(index, list.length))
+                } else if (word.toLowerCase() == "join") {
+                    boolThanos++;
+                } else {
+                    if (tablesNames.indexOf(word != -1)) {
+                        boolThanos--;
+                        todasTabelasDoComando.push(word)
+                    } else {
+                        boolAccept = false;
+                    }
+                }
+                index++;
+            }
+
+            if (boolThanos > 1 || boolThanos < 0)
+                boolAccept = false
+        })
+
+        //if(boolAccept)
+
+    }
+
+    function createCartesianAfterJoin(list) {
+        joinResult = {
+            type: "cartesian_product",
+            params: [],
+            input: []
+        };
+        if (boolAccept) {
+            var posiAux = 0;
+            var objAux;
+            var arrayReverse = todasTabelasDoComando.reverse();
+            arrayReverse.forEach(tabela => {
+                if (posiAux <= 1) {
+                    joinResult.input.push(tabela)
+                    objAux = joinResult;
+                    posiAux++;
+                } else {
+                    joinResult = {
+                        type: "cartesian_product",
+                        params: [],
+                        input: []
+                    };
+                    joinResult.input.push(tabela)
+                    joinResult.input.push(objAux)
+                    objAux = joinResult
+                }
+            });
+            selectionResult.input.push(joinResult);
+            result.input.push(selectionResult);
+        }
+        parseAfterFrom(list)
+    }
+
+    function whereParseAcc(list) {
+        var stringList = list.join(" ");
+        preWhereResult(stringList)
+    }
+
+    var whereResult;
+
+
+    function preWhereResult(str) {
+        var listP = str.split(" ");
+        var deleteCount = 0;
+
+        for (var i = 0; i < listP.length; i++) {
+            switch (listP[i]) {
+                case "(":
+                case ")":
+                case "and":
+                case "or":
+                    break;
+
+                default:
+                    var obj = { type: listP[i + 1], params: [listP[i], listP[i + 2]], input: [] }
+                    listP[i] = obj;
+                    listP[i + 1] = "DELETE";
+                    listP[i + 2] = "DELETE";
+                    i += 2;
+                    deleteCount += 2;
+            }
+        }
+        while (deleteCount != 0) {
+            listP.splice(listP.indexOf("DELETE"), 1)
+            deleteCount--;
+        }
+        whereResultCreate(listP)
+
+    }
+
+    //WHERE RESULT
+    function whereResultCreate(str) {
+
+        var aux = [];
+        var posi = [];
+        var boolTemPar = false;
+        for (var i = 0; i < str.length; i++) {
+            switch (str[i]) {
+                case " ":
+                case "":
+                    break;
+                case "(":
+                    aux = [];
+                    posi = [];
+                    posi.push(i);
+                    boolTemPar = true;
+                    break;
+
+                case ")":
+                    if (aux != null && aux.length > 0) {
+                        arr1.push(aux);
+                        posi.push(i);
+
+                        if (posi.length > 1)
+                            posiFinal.push(posi)
+
+                        aux = []
+                        posi = []
+                    }
+                    break;
+
+                default:
+                    aux.push(str[i]);
+            }
+        }
+        for (var i = 0; i < arr1.length; i++) {
+            while (arr1[i].length > 1) {
+                var currentArr = arr1[i];
+                var obj = { type: currentArr[1], params: [], input: [] }
+
+                if (!currentArr[0][0])
+                    obj.params.push(currentArr[0])
+                else
+                    obj.params.push(currentArr[0][0])
+
+
+                if (!currentArr[2][0])
+                    obj.params.push(currentArr[2])
+                else
+                    obj.params.push(currentArr[2][0])
+
+
+                arr1[i].shift();
+                arr1[i].shift();
+                arr1[i][0] = obj;
+            }
+        }
+
+
+        var deleteCount = 0;
+        while (posiFinal.length > 0) {
+
+            var posicao = posiFinal[0][0] + 1;
+            var final = posiFinal[0][1];
+            posiFinal.shift();
+
+            str[posicao - 1] = arr1[0];
+            arr1.shift();
+
+            for (var i = posicao; i <= final; i++) {
+                str[i] = "DELETE";
+                deleteCount++;
+            }
+        }
+
+        while (deleteCount != 0) {
+            str.splice(str.indexOf("DELETE"), 1)
+            deleteCount--;
+        }
+
+        if (boolTemPar) {
+            whereResultCreate(str)
+        } else {
+            var vaitomarnocu = str.length;
+            for (var i = 0; i < vaitomarnocu; i += 3) {
+                var currentArr = str;
+                var obj = { type: currentArr[1], params: [], input: [] }
+                var auxFixedArrProblem;
+
+                if (currentArr[0]) {
+                    if (!currentArr[0][0])
+                        obj.params.push(currentArr[0])
+                    else
+                        obj.params.push(currentArr[0][0])
+                } else {
+                    obj.params.push(currentArr[0])
+                }
+
+
+
+                if (currentArr[2]) {
+                    if (!currentArr[2][0])
+                        obj.params.push(currentArr[2])
+                    else
+                        obj.params.push(currentArr[2][0])
+                } else {
+                    obj.params.push(currentArr[2])
+                }
+
+
+                obj.params.forEach(e => {
+                    if (Array.isArray(e)) {
+                        auxFixedArrProblem = e[0];
+                        obj.params.splice(obj.params.indexOf(e), 1)
+                        obj.params.push(auxFixedArrProblem)
+                        auxFixedArrProblem = "";
+                    }
+                });
+
+                str.shift();
+                str.shift();
+                str[0] = obj;
+
+            }
+            console.log(str)
+            selectionResult.params.push(str[0]);
+            var aaaaah = document.querySelector(".result")
+            console.log(JSON.stringify(result))
+            aaaaah.value = JSON.stringify(result);
+        }
+
+    }
+</script>
 
 </html>
