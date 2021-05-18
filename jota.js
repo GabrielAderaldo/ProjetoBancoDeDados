@@ -4,115 +4,112 @@ const Movimentacao = require("./Models/Movimentacao")
 const TipoConta = require("./Models/TipoConta")
 const TipoMovimento = require("./Models/TipoMovimento")
 const Usuario = require("./Models/Usuario")
+const fs = require('fs');
 
 var selectVariables;
-var tablesNames = ["Categoria","Contas","Movimentacao","TipoMovimento","TipoConta","Usuario"]
+var tablesNames = ["Categoria", "Contas", "Movimentacao", "TipoMovimento", "TipoConta", "Usuario"]
 
 var tableFrom = [
     //0
-    {name:"Categoria", atributos: ["idCategoria","DescCategoria"]},
+    { name: "Categoria", atributos: ["idcategoria", "desccategoria"] },
     //1
-    {name:"Contas",atributos: ["idConta","Descricao","TipoConta_idTipoConta","Usuario_idUsuario","SaldoInicial"]},
+    { name: "Contas", atributos: ["idconta", "descricao", "tipoconta_idtipoconta", "usuario_idUsuario", "saldoinicial"] },
     //2
-    {name:"Movimentacao",atributos:["idMovimentacao","DataMovimentacao","Descricao","TipoMovimento_idMovimento","Categoria_idCategoria","Contas_idConta","valor"]},
+    { name: "Movimentacao", atributos: ["idmovimentacao", "datamovimentacao", "descricao", "tipomovimento_idmovimento", "categoria_idcategoria", "contas_idconta", "valor"] },
     //3
-    {name:"TipoMovimento",atributos:["idTipoMovimento","DescMovimento"]},
+    { name: "TipoMovimento", atributos: ["idtipomovimento", "descmovimento"] },
     //4
-    {name:"TipoConta",atributos:["idTipoConta","Descricao"]},
+    { name: "TipoConta", atributos: ["idtipoConta", "descricao"] },
     //5
-    {name:"Usuario",atributos:["idUsuario","Nome","Logradouro","Numero","Bairro","CEP","UF","DataNascimento"]}
+    { name: "Usuario", atributos: ["idusuario", "nome", "logradouro", "numero", "bairro", "cep", "uf", "datanascimento"] }
 ];
 
 var boolAccept = true;
-var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "Like", "And", "Or"]
+var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "like"]
+var listaOperadorAndOr = ["and", "or"]
 //var listaOperadores = ["=", ">", "<", "<=", ">=", "<>", "And", "Or", "In", "Notin", "Like"] com "in" e "not in"
-var listaComandos = ["Select", "From", "Join","Where", "Order", "By"]
+var listaComandos = ["select", "from", "join", "where", "order", "by"]
 var listObj = [];
-var result = {type:"projection",
-              params:[],
-              input:[]};
-
-var selectionResult = {type:"selection",
-                params:[],
-                input:[]};
-
-var joinResult = {type:"cartesian_product",
-                input:[],
-                params:[]};
+var result = { type: "projection", params: [], input: [] };
+var selectionResult = { type: "selection", params: [], input: [] };
+var joinResult = { type: "cartesian_product", input: [], params: [] };
 
 var todasTabelasDoComando = [];
 
-function parseSql(text){
+
+
+function parseSql(text) {
+    text = text.toLowerCase();
+
     var list = text.split(' ');
     var verificationList = []
-    list.forEach(word =>{
-        if(listaComandos.indexOf(word)!=-1){
+    list.forEach(word => {
+        if (listaComandos.indexOf(word) != -1) {
             verificationList.push(word)
         }
     })
-    verificarOrdem(verificationList,list)
+    verificarOrdem(verificationList, list)
 }
 
-function verificarOrdem(list,listTxt){
+function verificarOrdem(list, listTxt) {
     //select > from > join > where > order by 
-    var selectIndice = list.indexOf("Select")!= -1 ? list.indexOf("Select") : Infinity;
-    var fromIndice = list.indexOf("From")!= -1 ? list.indexOf("From") : Infinity;
-    var joinIndice = list.indexOf("Join")!= -1 ? list.indexOf("Join") : Infinity;
-    var whereIndice = list.indexOf("Where")!= -1 ? list.indexOf("Where") : Infinity;
-    var orderIndice = list.indexOf("Order")!= -1 ? list.indexOf("Order") : Infinity;
-    var byIndice = list.indexOf("By")!= -1 ? list.indexOf("By") : Infinity;
+    var selectIndice = list.indexOf("select") != -1 ? list.indexOf("select") : Infinity;
+    var fromIndice = list.indexOf("from") != -1 ? list.indexOf("from") : Infinity;
+    var joinIndice = list.indexOf("join") != -1 ? list.indexOf("join") : Infinity;
+    var whereIndice = list.indexOf("where") != -1 ? list.indexOf("where") : Infinity;
+    var orderIndice = list.indexOf("order") != -1 ? list.indexOf("order") : Infinity;
+    var byIndice = list.indexOf("by") != -1 ? list.indexOf("by") : Infinity;
 
-    if(selectIndice == 0 && fromIndice== 1 && (joinIndice<whereIndice || whereIndice!=Infinity || joinIndice==Infinity) && 
-    (joinIndice<orderIndice || orderIndice==Infinity || joinIndice==Infinity) && 
-    (whereIndice<orderIndice || orderIndice==Infinity || whereIndice==Infinity) && (byIndice-orderIndice==1||byIndice == orderIndice))
-    {
-        if(list[0] == "Select")
-        selectParse(listTxt.slice(1,listTxt.length))
+    if (selectIndice == 0 && fromIndice == 1 && (joinIndice < whereIndice || whereIndice != Infinity || joinIndice == Infinity) &&
+        (joinIndice < orderIndice || orderIndice == Infinity || joinIndice == Infinity) &&
+        (whereIndice < orderIndice || orderIndice == Infinity || whereIndice == Infinity) && (byIndice - orderIndice == 1 || byIndice == orderIndice)) {
+        if (list[0] == "select")
+            selectParse(listTxt.slice(1, listTxt.length))
         else
+            boolAccept = false;
+
+    } else {
         boolAccept = false;
-    }else{
-        console.log("erro")
     }
 
 }
 
-function selectParse(list){
+function selectParse(list) {
+    console.log("Foi aceito no verification ordem")
     var cont = 0;
     var variableTxt = "";
 
-    while(cont<list.length&&boolAccept){
+    while (cont < list.length && boolAccept) {
         variableTxt += list[cont];
 
-        switch(list[cont+1].toLowerCase()){
+        switch (list[cont + 1].toLowerCase()) {
             case 'where':
-                boolAccept = false;
-                break;
-
             case 'join':
-                boolAccept = false;
-                break;
-
             case 'order by':
                 boolAccept = false;
+
                 break;
 
             case 'from':
-                if(boolAccept){
+                if (boolAccept) {
                     selectVariables = variableTxt.split(',')
-                    if(selectVariables.indexOf("*")!=-1 && selectVariables.length==1){
+                    if (selectVariables.indexOf("*") != -1 && selectVariables.length == 1) {
                         result.type = "projection";
                         boolAccept = true;
-                        fromParse(list.slice(cont+2,list.length));
-                    }else{
-                        if(selectVariables.indexOf("*")!=-1){
+                        result.params = "*";
+                        fromParse(list.slice(cont + 2, list.length));
+                    } else {
+                        boolAccept = false;
+                        if (selectVariables.indexOf("*") != -1) {
                             boolAccept = false;
-                        }else{
+                        } else {
                             result.type = "projection";
+                            result.params = selectVariables;
                             boolAccept = true;
-                            fromParse(list.slice(cont+2,list.length));
+                            fromParse(list.slice(cont + 2, list.length));
                         }
                     }
-                    
+
                     cont = list.length;
                 }
                 break;
@@ -121,235 +118,218 @@ function selectParse(list){
     }
 }
 
-function fromParse(list){
-    if(tablesNames.indexOf(list[0] != -1)){
+function fromParse(list) {
+    console.log("Foi aceito no select parse")
+    if (tablesNames.indexOf(list[0] != -1)) {
         todasTabelasDoComando.push(list[0])
         tableAndVariable(list)
-    }else{
+    } else {
         boolAccept = false;
+
     }
 
 }
 
-function tableAndVariable(list){
-    switch(list[0]){
-        case "Categoria":
-            selectVariables.forEach(v=>{
-                if(tableFrom[0].atributos.indexOf(v)== -1)
-                boolAccept = false;
-            });
-             
-        break;
-
-        case "Contas":
-            selectVariables.forEach(v=>{
-                if(tableFrom[1].atributos.indexOf(v)== -1)
-                boolAccept = false;
+function tableAndVariable(list) {
+    console.log("foi aceito no from parse")
+    switch (list[0]) {
+        case "categoria":
+            selectVariables.forEach(v => {
+                if (tableFrom[0].atributos.indexOf(v) == -1)
+                    boolAccept = false;
             });
 
-        break;
+            break;
 
-        case "Movimentacao":
-            selectVariables.forEach(v=>{
-                if(tableFrom[2].atributos.indexOf(v)== -1)
-                boolAccept = false;
+        case "contas":
+            selectVariables.forEach(v => {
+                if (tableFrom[1].atributos.indexOf(v) == -1)
+                    boolAccept = false;
             });
 
-        break;
+            break;
 
-        case "TipoMovimento":
-            selectVariables.forEach(v=>{
-                if(tableFrom[3].atributos.indexOf(v)== -1)
-                boolAccept = false;
+        case "movimentacao":
+            selectVariables.forEach(v => {
+                if (tableFrom[2].atributos.indexOf(v) == -1)
+                    boolAccept = false;
             });
 
-        break;
+            break;
 
-        case "TipoConta":
-            selectVariables.forEach(v=>{
-                if(tableFrom[4].atributos.indexOf(v)== -1)
-                boolAccept = false;
+        case "tipomovimento":
+            selectVariables.forEach(v => {
+                if (tableFrom[3].atributos.indexOf(v) == -1)
+                    boolAccept = false;
             });
 
-        break;
+            break;
 
-        case "Usuario":
-            selectVariables.forEach(v=>{
-                if(tableFrom[5].atributos.indexOf(v)== -1)
-                boolAccept = false;
+        case "tipoconta":
+            selectVariables.forEach(v => {
+                if (tableFrom[4].atributos.indexOf(v) == -1)
+                    boolAccept = false;
             });
 
-        break;
+            break;
+
+        case "usuario":
+            selectVariables.forEach(v => {
+                if (tableFrom[5].atributos.indexOf(v) == -1)
+                    boolAccept = false;
+            });
+            break;
 
         default:
             boolAccept = false;
-        break;
+            break;
     }
-    if(selectVariables.indexOf("*"!=-1)){
-        boolAccept = selectVariables.length == 1 ? true:false;
+    if (selectVariables.indexOf("*" != -1)) {
+        boolAccept = selectVariables.length == 1 ? true : false;
     }
-    if(boolAccept){
-        if(list.length>1)
-        parseAfterFrom(list.splice(1,list.length))
+    if (boolAccept) {
+        if (list.length > 1) {
+            console.log("foi aceito no tableAndVariable")
+            parseAfterFrom(list.splice(1, list.length))
+        }
     }
 
 
 }
 
-function parseAfterFrom(list){
-    //console.log(list)
-    switch(list[0].toLowerCase()){
+function parseAfterFrom(list) {
 
+    switch (list[0].toLowerCase()) {
         case "join":
+            console.log("passou no parseafterfrom pro join")
             joinParseAcc(list)
-        break;
+            break;
 
         case "where":
-        whereParseAcc(list.splice(1,list.length))
-        break;
+            console.log("passou no parseafterfrom pro where")
+            whereParseAcc(list.splice(1, list.length))
+            break;
 
         case "order":
-        break;
+            break;
 
         default:
-        boolAccept = false;
-        break;
+            boolAccept = false;
+            break;
     }
 }
 
-function joinParseAcc(list){
+function joinParseAcc(list) {
     var index = 0;
     var boolThanos = 0;
-    list.forEach(word=>{
-        console.log(word)
-        if(boolAccept){
-            if(listaComandos.indexOf(word)!=-1 && word.toLowerCase()!="join"){
-                createCartesianAfterJoin(list.splice(index,list.length))
-            }else if(word.toLowerCase()=="join"){
+    list.forEach(word => {
+        //console.log(word)
+        if (boolAccept) {
+            if (listaComandos.indexOf(word) != -1 && word.toLowerCase() != "join") {
+                createCartesianAfterJoin(list.splice(index, list.length))
+            } else if (word.toLowerCase() == "join") {
                 boolThanos++;
-            }else{
-                if(tablesNames.indexOf(word != -1)){
+            } else {
+                if (tablesNames.indexOf(word != -1)) {
                     boolThanos--;
                     todasTabelasDoComando.push(word)
-                }else{
+                } else {
                     boolAccept = false;
                 }
             }
             index++;
         }
 
-        if(boolThanos>1||boolThanos<0)
-        boolAccept=false
+        if (boolThanos > 1 || boolThanos < 0)
+            boolAccept = false
     })
 
     //if(boolAccept)
 
 }
 
-function createCartesianAfterJoin(list){
-     joinResult = {
-        type:"cartesian_product",
-        params:[],
-        input:[] 
-        };
-    if(boolAccept){
-       var posiAux = 0;
-       var objAux;
-       var arrayReverse = todasTabelasDoComando.reverse();
-       arrayReverse.forEach(tabela => {
-           if(posiAux<=1){
+function createCartesianAfterJoin(list) {
+    joinResult = {
+        type: "cartesian_product",
+        params: [],
+        input: []
+    };
+    if (boolAccept) {
+        var posiAux = 0;
+        var objAux;
+        var arrayReverse = todasTabelasDoComando.reverse();
+        arrayReverse.forEach(tabela => {
+            if (posiAux <= 1) {
                 joinResult.input.push(tabela)
-               objAux = joinResult;
-               posiAux++;
-           }else{
-            joinResult = {
-                type:"cartesian_product",
-                params:[],
-                input:[] 
+                objAux = joinResult;
+                posiAux++;
+            } else {
+                joinResult = {
+                    type: "cartesian_product",
+                    params: [],
+                    input: []
                 };
                 joinResult.input.push(tabela)
                 joinResult.input.push(objAux)
                 objAux = joinResult
-                console.log(objAux.input[0])
-           }
-       });
-       selectionResult.input = joinResult
-       result.input = selectionResult
+                // console.log(objAux.input[0])
+            }
+        });
+        selectionResult.input = joinResult
+        result.input = selectionResult
     }
     parseAfterFrom(list)
 }
 
-function whereParseAcc(list){
-    //console.log(list)
+function whereParseAcc(list) {
+    console.log("entrou no where")
+    console.log(list)
     var contador = 0;
-    list.forEach(word =>{
-        
-        if(listaComandos.indexOf(word)!=-1){
-            listObj.forEach(obj=>{
+    list.forEach(word => {
+        if (listaOperadores.indexOf(word) != -1 || listaOperadorAndOr.indexOf(word) != -1) {
+            if (listaOperadores.indexOf(word) != -1) {
+                listObj.push({ value: word, tipo: "Operador" })
+                if (contador > 0) {
+                    if (listObj[contador].tipo == listObj[contador - 1].tipo)
+                        boolAccept = false;
+
+                }
+            }
+
+            if(listaOperadorAndOr.indexOf(word) != -1){
+                listObj.push({ value: word, tipo: "OperadorAndOr" })
+                if (contador > 0) {
+                    if (listObj[contador].tipo == listObj[contador - 1].tipo)
+                        boolAccept = false;
+                }
+            }
+
+        } else {
+            listObj.push({ value: word, tipo: "variavel" })
+            selectionResult.params.push(word);
+            if (contador > 0) {
+                if (listObj[contador].tipo == listObj[contador - 1].tipo) {
+                    console.log("NAAAO passou no where parse")
+                    boolAccept = false;
+                }
+            }
+        }
+
+        /*listObj.forEach(obj=>{
                 if(obj.tipo=="variavel")
                 result.params.push(obj.value);
             })
             result.input.push(selectionResult)
-            parseAfterFrom(list.splice(contador,list.length))
-        }else{
-            if(listaOperadores.indexOf(word)!= -1){
-                listObj.push({value: word, tipo:"Operador"})
-                if(contador>0){
-                    if(listObj[contador].tipo == listObj[contador-1].tipo)
-                    boolAccept =  false;
-                }
-            }else{
-                listObj.push({value: word, tipo:"variavel"})
-                selectionResult.params.push(word);
-                if(contador>0){
-                    if(listObj[contador].tipo == listObj[contador-1].tipo)
-                    boolAccept =  false;
-                }
-            }
-        }
+            console.log("teste rapidin "+list.splice(contador,list.length))
+            parseAfterFrom(list.splice(contador,list.length))*/
+
         contador++;
     })
 }
 
+parseSql("Select nome From Usuario Join Categoria Join Contas Join Movimentacao Where X = Nome AND y = t")
+console.log(boolAccept ? "É uma expressao valida" : "Não é uma expressao valida");
+//console.log(listObj)2
 
-parseSql("Select nome From Usuario Join Categoria Join Contas Join Movimentacao Where")
-console.log(boolAccept? "É uma expressao valida" : "Não é uma expressao valida");
-//console.log(listObj)
-//console.log(result)
-console.log("TABELAS : NOME CATEGORIA CONTAS MOVIMENTACAO")
-console.log(joinResult)
-console.log("/////////INPUT DO JOIN RESULT////////")
-console.log(joinResult.input)
-console.log("///////////INPUT DO INPUT/////////////")
-console.log(joinResult.input[1].input)
-console.log("////////////////////////////")
-console.log(result)
-//logicaDoWhere("((())())")
-/*function logicaDoWhere(texto){
-    var posicoesAbertas = []
-    var posicoesFechadas = []
-    var indexContador = 0
-    var contAbrir = 0;
-    var contFechar = 0;
-    var contDiferenca = 0;
-    texto.split("").forEach(word => {
-
-        if(word=="("){
-            contAbrir++
-            contDiferenca++
-            posicoesAbertas.push({posicao: indexContador, value:contDiferenca})
-        }
-        
-        if(word==")"){
-            contFechar++
-            posicoesFechadas.push({posicao: indexContador, value:contDiferenca})
-            contDiferenca--
-        }
-        indexContador++;
-    });
-    if(contDiferenca!=0)
-    console.log("ta errado")
-
-    console.log(posicoesAbertas)
-    console.log(posicoesFechadas)
-}*/
+var json = JSON.stringify(result)
+fs.writeFileSync('result.json', json, 'utf8')
