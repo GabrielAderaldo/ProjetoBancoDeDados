@@ -277,8 +277,8 @@ function createCartesianAfterJoin(list) {
                 // console.log(objAux.input[0])
             }
         });
-        selectionResult.input = joinResult
-        result.input = selectionResult
+        selectionResult.input.push(joinResult);
+        result.input.push(selectionResult);
     }
     parseAfterFrom(list)
 }
@@ -401,13 +401,19 @@ function whereResultCreate(str){
         var vaitomarnocu = str.length/2;
         for(var i = 0; i<vaitomarnocu;i++){
             var currentArr = str;
-            var obj = {type:currentArr[1],params:[currentArr[0],currentArr[2]],input:[]}
+            var obj = {type:currentArr[1],params:[],input:[]}
+            
+            if(currentArr[0]!=null)
+            obj.params.push(currentArr[0])
+
+            if(currentArr[2]!=null)
+            obj.params.push(currentArr[2])
             str.shift();
             str.shift();
             str[0]=obj;
         }
         whereresult = str;
-        selectionResult.params = whereresult;
+        selectionResult.params.push(whereresult);
     }
 
 }
