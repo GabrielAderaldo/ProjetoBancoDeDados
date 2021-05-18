@@ -1,5 +1,13 @@
 const fs = require('fs')
 
+var tableFrom = {
+    "Categoria": ["idcategoria", "desccategoria"],
+    "Contas": ["idconta", "ESSN", "tipoconta_idtipoconta", "usuario_idUsuario", "saldoinicial"] ,
+    "Movimentacao": ["idmovimentacao", "SSN", "descricao", "tipomovimento_idmovimento", "categoria_idcategoria", "contas_idconta", "valor"],
+    "TipoMovimento": ["idtipomovimento", "descmovimento", "P.NAME"],
+    "TipoConta": ["idtipoConta", "PNO"],
+    "Usuario": ["idusuario", "nome", "logradouro", "BDATE", "bairro", "cep", "uf", "datanascimento"]
+};
 
 class binaryTree{
     constructor(){
@@ -20,6 +28,17 @@ class binaryTree{
         if(node.left) {node.left = this.mountNode(node.left)}
         if(node.right) {node.right = this.mountNode(node.right)}
         return node;
+    }
+    findNodeNextForTable(node){
+        let table = []
+        node.params.forEach((param) => {
+            Object.keys(tableFrom).forEach((key) => {
+                if (tableFrom[key].includes(param)){
+                    table.push(key)
+                }
+            })
+        })
+        return table
     }
 }
 function generateBinaryTree(tokens){
@@ -190,7 +209,10 @@ let select3_2 = {
 }
 
 let x = generateBinaryTree(select3_2)
-console.log(x)
+
+x.values[3].params[0].params.forEach((param) => {
+    x.findNodeNextForTable(param)
+})
 let nodes_to_trade = []
 let iterator = []
 let index = x.getRoot()
@@ -203,9 +225,9 @@ while(x.getValue(index) != null || iterator.length > 0){
             x.getValue(index).params.forEach((sel_param) => {
                 nodes_to_trade.forEach((entry) => {
                     x.getValue(entry.node).params.forEach((proj_param) => {
-                        console.log(`${sel_param} versus ${proj_param}`)
+                        //console.log(`${sel_param} versus ${proj_param}`)
                         if(sel_param == proj_param){
-                            console.log("Here")
+                            //console.log("Here")
                         }
                     })
                 })
@@ -219,8 +241,8 @@ while(x.getValue(index) != null || iterator.length > 0){
         index = x.getValue(index)?.right
     }
 }
-console.log("Nodes pra trocar:")
-console.log(nodes_to_trade)
+//console.log("Nodes pra trocar:")
+//console.log(nodes_to_trade)
 
 
 
