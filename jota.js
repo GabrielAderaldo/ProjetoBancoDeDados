@@ -364,7 +364,23 @@ function whereResultCreate(str){
     for(var i = 0; i<arr1.length; i++){
         while(arr1[i].length>1){
             var currentArr = arr1[i];
-            var obj = {type:currentArr[1],params:[currentArr[0],currentArr[2]],input:[]}
+            var obj = {type:currentArr[1],params:[],input:[]}
+
+            if(!currentArr[0][0])
+            obj.params.push(currentArr[0])
+            else
+            obj.params.push(currentArr[0][0])
+            
+            
+            if(!currentArr[2][0])
+            obj.params.push(currentArr[2])
+            else
+            obj.params.push(currentArr[2][0])
+
+            console.log("vai tomar no cu")
+            console.log(obj.params)
+
+
             arr1[i].shift();
             arr1[i].shift();
             arr1[i][0]=obj;
@@ -398,16 +414,21 @@ function whereResultCreate(str){
     if(boolTemPar){
         whereResultCreate(str)
     }else{
-        var vaitomarnocu = str.length/2;
-        for(var i = 0; i<vaitomarnocu;i++){
+        var vaitomarnocu = str.length;
+        for(var i = 0; i<vaitomarnocu;i+=3){
             var currentArr = str;
             var obj = {type:currentArr[1],params:[],input:[]}
-            
-            if(currentArr[0]!=null)
-            obj.params.push(currentArr[0])
 
-            if(currentArr[2]!=null)
+            if(!currentArr[0][0])
+            obj.params.push(currentArr[0])
+            else
+            obj.params.push(currentArr[0][0])
+            
+            
+            if(!currentArr[2][0])
             obj.params.push(currentArr[2])
+            else
+            obj.params.push(currentArr[2][0])
 
             str.shift();
             str.shift();
