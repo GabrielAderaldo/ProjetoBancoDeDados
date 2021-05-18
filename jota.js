@@ -408,12 +408,13 @@ function whereResultCreate(str){
 
             if(currentArr[2]!=null)
             obj.params.push(currentArr[2])
+
             str.shift();
             str.shift();
             str[0]=obj;
         }
         whereresult = str;
-        selectionResult.params.push(whereresult);
+        selectionResult.params = str[0].params;
     }
 
 }
