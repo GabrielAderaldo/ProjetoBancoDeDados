@@ -418,6 +418,7 @@ function whereResultCreate(str){
         for(var i = 0; i<vaitomarnocu;i+=3){
             var currentArr = str;
             var obj = {type:currentArr[1],params:[],input:[]}
+            var auxFixedArrProblem;
 
             if(!currentArr[0][0])
             obj.params.push(currentArr[0])
@@ -430,11 +431,23 @@ function whereResultCreate(str){
             else
             obj.params.push(currentArr[2][0])
 
+            obj.params.forEach(e => {
+                if(Array.isArray(e)){
+                    auxFixedArrProblem = e[0];
+                    obj.params.splice(obj.params.indexOf(e),1)
+                    obj.params.push(auxFixedArrProblem)
+                    auxFixedArrProblem = "";
+                }
+            });
+
             str.shift();
             str.shift();
             str[0]=obj;
+
+
+            console.log("parametrossssssss")
+            console.log(obj.params)
         }
-        whereresult = str;
         selectionResult.params = str[0].params;
     }
 
