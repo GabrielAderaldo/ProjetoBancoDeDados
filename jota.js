@@ -77,7 +77,6 @@ function verificarOrdem(list, listTxt) {
 }
 
 function selectParse(list) {
-    console.log("Foi aceito no verification ordem")
     var cont = 0;
     var variableTxt = "";
 
@@ -121,7 +120,6 @@ function selectParse(list) {
 }
 
 function fromParse(list) {
-    console.log("Foi aceito no select parse")
     if (tablesNames.indexOf(list[0] != -1)) {
         todasTabelasDoComando.push(list[0])
         tableAndVariable(list)
@@ -133,7 +131,6 @@ function fromParse(list) {
 }
 
 function tableAndVariable(list) {
-    console.log("foi aceito no from parse")
     switch (list[0]) {
         case "categoria":
             selectVariables.forEach(v => {
@@ -191,7 +188,6 @@ function tableAndVariable(list) {
     }
     if (boolAccept) {
         if (list.length > 1) {
-            console.log("foi aceito no tableAndVariable")
             parseAfterFrom(list.splice(1, list.length))
         }
     }
@@ -203,12 +199,10 @@ function parseAfterFrom(list) {
 
     switch (list[0].toLowerCase()) {
         case "join":
-            console.log("passou no parseafterfrom pro join")
             joinParseAcc(list)
             break;
 
         case "where":
-            console.log("passou no parseafterfrom pro where")
             whereParseAcc(list.splice(1, list.length))
             break;
 
@@ -225,7 +219,6 @@ function joinParseAcc(list) {
     var index = 0;
     var boolThanos = 0;
     list.forEach(word => {
-        //console.log(word)
         if (boolAccept) {
             if (listaComandos.indexOf(word) != -1 && word.toLowerCase() != "join") {
                 createCartesianAfterJoin(list.splice(index, list.length))
@@ -274,7 +267,6 @@ function createCartesianAfterJoin(list) {
                 joinResult.input.push(tabela)
                 joinResult.input.push(objAux)
                 objAux = joinResult
-                // console.log(objAux.input[0])
             }
         });
         selectionResult.input.push(joinResult);
@@ -284,7 +276,6 @@ function createCartesianAfterJoin(list) {
 }
 
 function whereParseAcc(list) {
-    console.log("entrou no where")
     var stringList = list.join(" ");
     preWhereResult(stringList)
 }
@@ -293,13 +284,10 @@ var whereResult;
 
 
 function preWhereResult(str){
-    console.log(str)
     var listP = str.split(" ");
     var deleteCount = 0;
     
     for(var i = 0; i<listP.length; i++){
-        console.log(i)
-        console.log(listP[i])
         switch(listP[i]){
             case "(":
             case ")":
@@ -359,8 +347,6 @@ function whereResultCreate(str){
                 aux.push(str[i]);
         }
     }
-    console.log("VOU CHORAR")
-    console.log(arr1.length)
     for(var i = 0; i<arr1.length; i++){
         while(arr1[i].length>1){
             var currentArr = arr1[i];
@@ -377,20 +363,15 @@ function whereResultCreate(str){
             else
             obj.params.push(currentArr[2][0])
 
-            console.log("vai tomar no cu")
-            console.log(obj.params)
-
 
             arr1[i].shift();
             arr1[i].shift();
             arr1[i][0]=obj;
         } 
     }
-    console.log("fooooreach")
-    arr1.forEach(x=>{console.log(x)})
+
 
     var deleteCount = 0;
-    console.log(posiFinal)
     while(posiFinal.length>0){
 
         var posicao = posiFinal[0][0]+1;
@@ -420,16 +401,26 @@ function whereResultCreate(str){
             var obj = {type:currentArr[1],params:[],input:[]}
             var auxFixedArrProblem;
 
-            if(!currentArr[0][0])
-            obj.params.push(currentArr[0])
-            else
-            obj.params.push(currentArr[0][0])
+            if(currentArr[0]){
+                if(!currentArr[0][0])
+                obj.params.push(currentArr[0])
+                else
+                obj.params.push(currentArr[0][0])
+            }else{
+                obj.params.push(currentArr[0])
+            }
             
             
-            if(!currentArr[2][0])
-            obj.params.push(currentArr[2])
-            else
-            obj.params.push(currentArr[2][0])
+            
+            if(currentArr[2]){
+                if(!currentArr[2][0])
+                obj.params.push(currentArr[2])
+                else
+                obj.params.push(currentArr[2][0])
+            }else{
+                obj.params.push(currentArr[2])
+            }
+            
 
             obj.params.forEach(e => {
                 if(Array.isArray(e)){
@@ -444,11 +435,9 @@ function whereResultCreate(str){
             str.shift();
             str[0]=obj;
 
-
-            console.log("parametrossssssss")
-            console.log(obj.params)
         }
-        selectionResult.params = str[0].params;
+        console.log(str)
+        selectionResult.params = str[0];
     }
 
 }
