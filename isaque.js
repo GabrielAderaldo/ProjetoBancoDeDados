@@ -4,9 +4,9 @@ const fs = require('fs')
 var tableFrom = {
     "Categoria": ["idcategoria", "desccategoria"],
     "Contas": ["idconta", "ESSN", "tipoconta_idtipoconta", "usuario_idUsuario", "saldoinicial"] ,
-    "Movimentacao": ["idmovimentacao", "SSN", "descricao", "tipomovimento_idmovimento", "categoria_idcategoria", "contas_idconta", "valor"],
+    "Movimentacao": ["idmovimentacao", "SSN", "descricao", "tipomovimento_idmovimento", "categoria_idcategoria", "contas_idconta", "y", "valor"],
     "TipoMovimento": ["idtipomovimento", "descmovimento", "P.NAME"],
-    "TipoConta": ["idtipoConta", "PNO"],
+    "TipoConta": ["idtipoConta", "PNO", "x"],
     "Usuario": ["idusuario", "nome", "logradouro", "BDATE", "bairro", "cep", "uf", "datanascimento"]
 };
 
@@ -15,6 +15,7 @@ class binaryTree{
         this.values = {};
         this.index = 0;
         this.root = 0;
+        this.selections = 0;
     }
     addValues(value){
         this.index++;
@@ -22,7 +23,9 @@ class binaryTree{
         return this.index;
     }
     getValue (index) { return this.values[index] }
+    setRoot() { this.root = this.index }
     getRoot () { return this.root }
+    getIndex() {return this.index}
     mountTree(){ return this.mountNode(this.index) }
     mountNode(index){
         let node = this.getValue(index)
@@ -42,11 +45,59 @@ class binaryTree{
         })
         return table
     }
+    findParent(node, start = this.root){
+        let index = []
+        let aux = start
+        while(aux || index.length > 0){
+            if(this.values[aux]){
+                index.push(aux)
+                aux = this.values[aux].left
+            }
+            else{
+                aux = index.pop()
+                if(this.values[aux].left == node || this.values[aux].right == node){
+                    return aux
+                }
+                aux = this.values[aux].right
+            }
+        }
+    }
+    nodeHeight(){
+        let heights = {}
+        let iterador = 0
+        heights[iterador] = [this.root]
+        heights[iterador+1] = []
+        if(this.values[this.root].left){
+            heights[iterador+1].push(this.values[this.root].left)
+        }
+        if(this.values[this.root].right){
+            heights[iterador+1].push(this.values[this.root].right)
+        }
+        while(heights[iterador+1].length > 0 || iterador < 3){
+            iterador += 1
+            heights[iterador+1] = []
+            heights[iterador].forEach(entry => {
+                if(this.values[entry]){
+                    if(this.values[entry].left){
+                        if(!heights[iterador+1].includes(this.values[entry].left)){
+                            heights[iterador+1].push(this.values[entry].left)
+                        }
+                    }
+                    if(this.values[entry].right){
+                        if(!heights[iterador+1].includes(this.values[entry].right)){
+                            heights[iterador+1].push(this.values[entry].right)
+                        }
+                    }
+                }
+            })
+        }
+        return heights
+    }
 }
 function generateBinaryTree(tokens){
     let binary_tree = new binaryTree;
     newHandleToken(tokens, binary_tree)
-    this.root = this.index
+    binary_tree.setRoot()
     return binary_tree
 }
 function newHandleToken(token, tree){
@@ -327,7 +378,7 @@ let select_putaquepariu = {
 let select_putaquepariuagrvai = {
     "type": "projection",
     "params": [
-        "nome", "P.NAME"
+        "idcategoria", "SSN", 'x'
     ],
     "input": [
         {
@@ -345,16 +396,16 @@ let select_putaquepariuagrvai = {
                                         {
                                             "type": "=",
                                             "params": [
-                                                "x",
-                                                "nome"
+                                                "descricao",
+                                                "xsxs"
                                             ],
                                             "input": []
                                         },
                                         {
                                             "type": "=",
                                             "params": [
-                                                "y",
-                                                "t"
+                                                "categoria_idcategoria",
+                                                "idcategoria"
                                             ],
                                             "input": []
                                         }
@@ -364,8 +415,8 @@ let select_putaquepariuagrvai = {
                                 {
                                     "type": "=",
                                     "params": [
-                                        "y",
-                                        "z"
+                                        "usuario_idusuario",
+                                        "idusuario"
                                     ],
                                     "input": []
                                 }
@@ -378,8 +429,8 @@ let select_putaquepariuagrvai = {
                                 {
                                     "type": "like",
                                     "params": [
-                                        "x",
-                                        "b"
+                                        "descricao",
+                                        "asss"
                                     ],
                                     "input": []
                                 },
@@ -389,7 +440,7 @@ let select_putaquepariuagrvai = {
                                         {
                                             "type": "=",
                                             "params": [
-                                                "b",
+                                                "idtipoConta",
                                                 "3"
                                             ],
                                             "input": []
@@ -397,7 +448,7 @@ let select_putaquepariuagrvai = {
                                         {
                                             "type": "=",
                                             "params": [
-                                                "c",
+                                                "descmovimento",
                                                 "5"
                                             ],
                                             "input": []
@@ -417,18 +468,18 @@ let select_putaquepariuagrvai = {
                     "type": "cartesian_product",
                     "params": [],
                     "input": [
-                        "usuario",
+                        "Usuario",
                         {
                             "type": "cartesian_product",
                             "params": [],
                             "input": [
-                                "categoria",
+                                "Categoria",
                                 {
                                     "type": "cartesian_product",
                                     "params": [],
                                     "input": [
-                                        "movimentacao",
-                                        "contas"
+                                        "Movimentacao",
+                                        "TipoConta"
                                     ]
                                 }
                             ]
@@ -440,14 +491,10 @@ let select_putaquepariuagrvai = {
     ]
 }
 
-let x = generateBinaryTree(select_putaquepariuagrvai)
-heuristicA(x, x.getRoot())
-
 function heuristicA(treeObj, root){
     let tree = treeObj.values
     let sel_n_proj = []
     let index = []
-    let nodes = []
     let aux = root
     while(aux || index.length > 0){
         if(tree[aux]){
@@ -457,60 +504,267 @@ function heuristicA(treeObj, root){
         else{
             aux = index.pop()
             if(tree[aux].value == "selection" || tree[aux].value == "projection"){
-                sel_n_proj.push(tree[aux])
+                sel_n_proj.push(aux)
             }
             aux = tree[aux].right
         }
     }
-    console.log(sel_n_proj)
     sel_n_proj.forEach((variable) => {
-        if(variable.value == "selection"){
-            findTablesSelection(variable, treeObj)
+        if(treeObj.values[variable].value == "selection"){
+            identifyLeaves(variable, treeObj)
         }
         else{
-            console.log(findTablesProjection(variable, treeObj))
+            //testingX(variable, treeObj)
         }
     })
 }
 
-function findTablesSelection(variable, treeObj){
-    console.log(splitSelections(variable))
-}
-
-function splitSelections(variable){
-    let result = Object.keys(tableFrom).forEach((key) => {
-        if (tableFrom[key].includes(variable.params[0])){
-            result.push(key)
+function identifyLeaves(variable, treeObj){
+    let leaves = []
+    let index = []
+    let aux = treeObj.values[variable].params[0]
+    while(aux || index.length > 0){
+        if(treeObj.values[aux]){
+            index.push(aux)
+            aux = treeObj.values[aux].left
         }
-    })
-    if(result.length <= 0){
-        
+        else{
+            aux = index.pop()
+            if(!treeObj.values[aux].left && !treeObj.values[aux].right){
+                leaves.push(aux)
+            }
+            aux = treeObj.values[aux].right
+        }
     }
+    identifyTablesUsedInLeaves(leaves, treeObj, variable)
 }
 
-function findTablesProjection(variable){
-    let result = []
-    variable.params.forEach((param) => {
-        Object.keys(tableFrom).forEach((key) => {
-            if (tableFrom[key].includes(param)){
-                result.push(key)
+function identifyTablesUsedInLeaves(leaves, treeObj, selection_original){
+    let tablesUsed = []
+    leaves.forEach(leaf => {
+        let result = []
+        treeObj.values[leaf].params.forEach(param => {
+            Object.keys(tableFrom).forEach((key) => {
+                if(tableFrom[key].includes(param)){
+                    result.push(key)
+                }
+            })
+        })
+        tablesUsed.push({node: leaf, tables: result})
+    })
+    createNewSelectionsAndPutItInPlace(tablesUsed, treeObj, selection_original)
+}
+
+function createNewSelectionsAndPutItInPlace(tablesUsed, treeObj, selection_original){
+    let tablesUsedInEveryNode = []
+    for(let x = 1; x <= treeObj.getRoot(); x++){
+        tablesUsedInEveryNode.push(whichTablesAreUsedInThisNode(x, treeObj))
+    }
+    let positions = []
+    tablesUsed.forEach(entry => {
+        let position
+        tablesUsedInEveryNode.forEach((z, index) => {
+            if(entry.tables.every(x => { return z.includes(x) })){
+                if(!position){
+                    position = {node: entry.node, go_to_above_of: index+1, length: z.length}
+                }
+                else if(position.length > z.length){
+                    position = {node: entry.node, go_to_above_of: index+1, length: z.length}
+                }
+            }
+        })
+        if(position)
+            positions.push(position)
+    })
+    positions.forEach(position => {
+        let parent = treeObj.values[treeObj.findParent(position.go_to_above_of)]
+        let new_selection = {
+            value: "selection",
+            params: [position.node],
+            left: parent.left
+        }
+        parent.left = treeObj.addValues(new_selection)
+    })
+    let above_original = treeObj.values[treeObj.findParent(selection_original)]
+    above_original.left = treeObj.values[selection_original].left
+    treeObj.values[selection_original] = {}
+    mergeSelectsInCascade(treeObj)
+}
+
+function mergeSelectsInCascade(treeObj){
+    let index = []
+    let aux = treeObj.getRoot()
+    while(aux || index.length > 0){
+        if(treeObj.values[aux]){
+            index.push(aux)
+            aux = treeObj.values[aux].left
+        }
+        else{
+            aux = index.pop()
+            if(treeObj.values[aux].value == "selection"){
+                let child = treeObj.values[aux].left
+                if(treeObj.values[child]){
+                    if(treeObj.values[child].value == "selection"){
+                        treeObj.values[aux].params = treeObj.values[aux].params.concat(treeObj.values[child].params)
+                        treeObj.values[aux].left = treeObj.values[child].left
+                        treeObj.values[child] = {}
+                    }
+                }
+            }
+            aux = treeObj.values[aux].right
+        }
+    }
+    transformCartesianProductsInJunctionsWhenPossible(treeObj)
+}
+
+function transformCartesianProductsInJunctionsWhenPossible(treeObj){
+    let index = []
+    let aux = treeObj.getRoot()
+    while(aux || index.length > 0){
+        if(treeObj.values[aux]){
+            index.push(aux)
+            aux = treeObj.values[aux].left
+        }
+        else{
+            aux = index.pop()
+            if(treeObj.values[aux].value == "cartesian_product"){
+                let parent = treeObj.findParent(aux)
+                if(treeObj.values[parent].value == "selection"){
+                    treeObj.values[aux].value = "junction"
+                    treeObj.values[aux].params = treeObj.values[parent].params
+                    let grand_parent = treeObj.findParent(parent)
+                    if(treeObj.values[grand_parent].left == parent){
+                        treeObj.values[grand_parent].left = aux
+                    }
+                    else{
+                        treeObj.values[grand_parent].right = aux
+                    }
+                    treeObj.values[parent] = {}
+                }
+            }
+            aux = treeObj.values[aux].right
+        }
+    }
+    //testing6(treeObj)
+}
+///////////////////////INCOMPLETO - ERA PARA CALCULAR OS PROJECTIONS DE CADA NÍVEL DA ÁRVORE////////////////////////////////
+/*function testing6(treeObj){
+    let tablesUsedInEveryNode = []
+    for(let x = 1; x <= treeObj.getIndex(); x++){
+        tablesUsedInEveryNode.push(whichTablesAreUsedInThisNode(x, treeObj))
+    }
+    let variables_used = {}
+    let index = []
+    let aux = treeObj.getRoot()
+    while(aux || index.length > 0){
+        let variables = []
+        if(treeObj.values[aux]){
+            if(treeObj.values[aux].params){
+                treeObj.values[aux].params.forEach(param => {
+                    if(treeObj.values[param]){
+                        treeObj.values[param].params.forEach(entry => {
+                            variables.push(entry)
+                        })
+                    }
+                    else{
+                        variables.push(param)
+                    }
+                })
+                variables_used[aux] = variables
+            }
+            index.push(aux)
+            aux = treeObj.values[aux].left
+        }
+        else{
+            aux = index.pop()
+            aux = treeObj.values[aux].right
+        }
+    }
+    let heights = treeObj.nodeHeight()
+    let variables_per_height = {}
+    let auxx = []
+    Object.keys(heights).forEach(key =>{
+        heights[key].forEach(entry => {
+            if(variables_used[entry]){
+                auxx = auxx.concat(variables_used[entry])
+            }
+        })
+        variables_per_height[key] = auxx
+    })
+    Object.keys(heights).forEach(key =>{
+        heights[key].forEach(entry => {
+            if(variables_used[entry] && entry != treeObj.getRoot()){
+                let parent = treeObj.findParent(entry)
+
+                let usable_variables = []
+                whichTablesAreUsedInThisNode(entry, treeObj).forEach((table) => {
+                    variables_per_height[key].forEach((variable) => {
+                        if(tableFrom[table].includes(variable)){
+                            usable_variables.push(variable)
+                        }
+                    })
+                })
+
+                let will_use_variables = []
+                usable_variables.forEach(variable => {
+                    treeObj.values[entry].params.forEach(param => {
+                        if(!treeObj.values[param].params.includes(variable)){
+                            if(!will_use_variables.includes(variable)){
+                                will_use_variables.push(variable)
+                            }
+                        }
+                    })
+                })
+                //console.log(will_use_variables)
+
+
+
+                let new_projection = treeObj.addValues({
+                    value: "projection",
+                    params: variables_per_height[key],
+                    left: treeObj.values[entry]
+                })
+                /*if (treeObj.values[entry] == treeObj.values[parent].left){
+                    treeObj.values[parent].left = new_projection
+                }
+                else{
+                    treeObj.values[parent].right = new_projection
+                }
+
             }
         })
     })
+    
+}*/
+
+
+function whichTablesAreUsedInThisNode(variable, treeObj){
+    let result = []
+    let left = treeObj.values[variable].left
+    let right = treeObj.values[variable].right
+    if(left){
+        if(!treeObj.values[left]){
+           result.push(left)
+        }
+        else{
+            result = result.concat(whichTablesAreUsedInThisNode(left, treeObj))
+        }
+    }
+    if(right){
+        if(!treeObj.values[right]){
+            result.push(right)
+        }
+        else{
+            result = result.concat(whichTablesAreUsedInThisNode(right, treeObj))
+        }
+    }
     return result
 }
 
+
 let response = generateBinaryTree(select_putaquepariuagrvai)
-fs.writeFile("out3_2_tree.json", JSON.stringify(response), 'utf8', (err) => {
-    if(err){
-        console.log(err)
-    }
-    else{
-        console.log("Arquivo escrito com sucesso")
-    }
-})
-response = response.mountTree()
-fs.writeFile("out3_2_mounted_tree.json", JSON.stringify(response), 'utf8', (err) => {
+heuristicA(response, response.getRoot())
+fs.writeFile("out_tree.json", JSON.stringify(response), 'utf8', (err) => {
     if(err){
         console.log(err)
     }
