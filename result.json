@@ -1,0 +1,113 @@
+{
+    "type": "projection",
+    "params": [
+        "nome"
+    ],
+    "input": [
+        {
+            "type": "selection",
+            "params": {
+                "type": "or",
+                "params": [
+                    {
+                        "type": "and",
+                        "params": [
+                            {
+                                "type": "and",
+                                "params": [
+                                    {
+                                        "type": "=",
+                                        "params": [
+                                            "x",
+                                            "nome"
+                                        ],
+                                        "input": []
+                                    },
+                                    {
+                                        "type": "=",
+                                        "params": [
+                                            "y",
+                                            "t"
+                                        ],
+                                        "input": []
+                                    }
+                                ],
+                                "input": []
+                            },
+                            {
+                                "type": "=",
+                                "params": [
+                                    "y",
+                                    "z"
+                                ],
+                                "input": []
+                            }
+                        ],
+                        "input": []
+                    },
+                    {
+                        "type": "and",
+                        "params": [
+                            {
+                                "type": "like",
+                                "params": [
+                                    "x",
+                                    "b"
+                                ],
+                                "input": []
+                            },
+                            {
+                                "type": "or",
+                                "params": [
+                                    {
+                                        "type": "=",
+                                        "params": [
+                                            "b",
+                                            "3"
+                                        ],
+                                        "input": []
+                                    },
+                                    {
+                                        "type": "=",
+                                        "params": [
+                                            "c",
+                                            "5"
+                                        ],
+                                        "input": []
+                                    }
+                                ],
+                                "input": []
+                            }
+                        ],
+                        "input": []
+                    }
+                ],
+                "input": []
+            },
+            "input": [
+                {
+                    "type": "cartesian_product",
+                    "params": [],
+                    "input": [
+                        "usuario",
+                        {
+                            "type": "cartesian_product",
+                            "params": [],
+                            "input": [
+                                "categoria",
+                                {
+                                    "type": "cartesian_product",
+                                    "params": [],
+                                    "input": [
+                                        "movimentacao",
+                                        "contas"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
