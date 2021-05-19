@@ -762,9 +762,9 @@ function whichTablesAreUsedInThisNode(variable, treeObj){
 }
 
 
-let response = generateBinaryTree(select_putaquepariuagrvai)
-heuristicA(response, response.getRoot())
-fs.writeFile("out_tree.json", JSON.stringify(response), 'utf8', (err) => {
+let x = generateBinaryTree(select_putaquepariuagrvai)
+heuristicA(x, x.getRoot())
+fs.writeFile("out_tree.json", JSON.stringify(x), 'utf8', (err) => {
     if(err){
         console.log(err)
     }
